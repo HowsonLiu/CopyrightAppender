@@ -1,0 +1,7 @@
+# 忽略Pycharm的配置文件夹
+
+# virtualenv
+/venv/
+
+# idea
+/.idea/
