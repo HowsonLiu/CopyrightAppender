@@ -4,7 +4,6 @@ import configparser
 class CopyrightAppender:
     ini_path = './CopyrightAppender.ini'
     new_copyright_path = './Copyright.txt'
-    old_copyright_path = './.oldCopyright'
 
     # 相同类型注释的后缀
     c_style_suffix = ['.c', '.cpp', '.h', '.java', '.php', '.js']
@@ -16,7 +15,8 @@ class CopyrightAppender:
     skip_file = []
     skip_dir = []
 
-    copyright_text = ''
+    # Copyright.txt文件每一行文字的列表
+    copyright_text_line = []
 
     def __init__(self):
         pass
@@ -54,10 +54,8 @@ class CopyrightAppender:
                     self.skip_dir.append(v)
 
     def __read_copyright(self):
-        file = open(self.new_copyright_path)
-        self.copyright_text = file.read()
-        file.close()
-        print(self.copyright_text)
+        with open(self.new_copyright_path) as file:
+            self.copyright_text_line = file.readlines()
 
     def Run(self):
         print('你要处理的文件夹为: ' + os.path.abspath('..'))
@@ -74,30 +72,70 @@ class CopyrightAppender:
             else:
                 if item not in self.skip_file:
                     if item in self.apply_file or item.endswith(tuple(self.suffix)):
-                        self.__choose_append_style(item)
+                        self.__choose_append_style(full_path)
                         print('文件 ' + full_path + ' 已添加')
                 else:
                     print('文件 ' + full_path + ' 已跳过')
 
-    def __choose_append_style(self, name):
+    def __choose_append_style(self, path):
         for suffix in self.c_style_suffix:
-            if name.endswith(suffix):
-                print(name + ' c-style')
+            if path.endswith(suffix):
+                self.__append_c(path)
                 return
         for suffix in self.python_style_suffix:
-            if name.endswith(suffix):
-                print(name + ' python-style')
+            if path.endswith(suffix):
+                self.__comment_on_py()
                 return
         for suffix in self.ini_style_suffix:
-            if name.endswith(suffix):
-                print(name + ' ini-style')
+            if path.endswith(suffix):
+                self.__comment_on_ini()
                 return
-        print(name + ' txt-style')
+        self.__comment_on_text()
 
+    def __comment_on_c(self):
+        c_comment = []
+        for line in self.copyright_text_line:
+            c_comment.append(' *' + line)
+        c_comment.insert(0, '/**\n')
+        c_comment.append('\n */')
+        c_comment.append('\n\n/*Add by CopyrightAppender*/\n')
+        return ''.join(c_comment)
+
+    def __append_c(self, path):
+        copyright_text = self.__comment_on_c()
+        with open(path, 'r+') as file:
+            oldtext = file.read()
+            file.seek(0)
+            file.write(copyright_text)
+            file.write(oldtext)
+
+
+    def __comment_on_py(self):
+        py_comment = []
+        for line in self.copyright_text_line:
+            py_comment.append('# ' + line)
+        py_comment.append('\n\n# Add by CopyrightAppender\n')
+        print(''.join(py_comment))
+
+    def __comment_on_ini(self):
+        ini_comment = []
+        for line in self.copyright_text_line:
+            ini_comment.append(';' + line)
+        ini_comment.append('\n\n;Add by CopyrightAppender\n')
+        print(''.join(ini_comment))
+
+    def __comment_on_text(self):
+        text_comment = []
+        for line in self.copyright_text_line:
+            text_comment.append(line)
+        text_comment.append('\n\nAdd by CopyrightAppender\n')
+        print(''.join(text_comment))
 
     def Work(self):
         if self.__check_file_exist() == 0:
             self.__read_copyright()
+            self.__read_ini()
+            self.Run()
 
 
 ca = CopyrightAppender()
