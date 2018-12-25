@@ -51,6 +51,7 @@ class CopyrightAppender:
 
     def ForeachDirAppend(self, path):
         for item in os.listdir(path):
+            item = os.path.join(path, item)
             if os.path.isdir(item):
                 print('Dir ' + item)
                 self.ForeachDirAppend(item)
