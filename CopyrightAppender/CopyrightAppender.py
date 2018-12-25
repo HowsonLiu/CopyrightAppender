@@ -59,11 +59,14 @@ class CopyrightAppender:
             full_path = os.path.join(path, item)
             if os.path.isdir(full_path):
                 if item not in self.skip_dir:
-                    self.__foreach_dir_append(item)
+                    print(full_path + '不跳过')
+                    self.__foreach_dir_append(full_path)
+                else:
+                    print(full_path + ' 已跳过')
             else:
                 if item not in self.skip_file:
-                    if item in self.apply_file or item.endswith(self.suffix):
-                        print(path + ' 已添加')
+                    if item in self.apply_file or item.endswith(tuple(self.suffix)):
+                        print(full_path + ' 已添加')
 
 
     def Work(self):
