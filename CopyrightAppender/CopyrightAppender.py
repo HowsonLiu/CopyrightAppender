@@ -6,7 +6,8 @@ class CopyrightAppender:
     new_copyright_path = './Copyright.txt'
     old_copyright_path = './.oldCopyright'
 
-    c_style_suffix = ['.c', '.cpp', '.h']
+    # 相同类型注释的后缀
+    c_style_suffix = ['.c', '.cpp', '.h', '.java', '.php', '.js']
     python_style_suffix = ['.py']
     ini_style_suffix = ['.ini']
 
@@ -14,6 +15,8 @@ class CopyrightAppender:
     apply_file = []
     skip_file = []
     skip_dir = []
+
+    copyright_text = ''
 
     def __init__(self):
         pass
@@ -50,6 +53,12 @@ class CopyrightAppender:
                 if v not in self.skip_dir:
                     self.skip_dir.append(v)
 
+    def __read_copyright(self):
+        file = open(self.new_copyright_path)
+        self.copyright_text = file.read()
+        file.close()
+        print(self.copyright_text)
+
     def Run(self):
         print('你要处理的文件夹为: ' + os.path.abspath('..'))
         self.__foreach_dir_append('..')
@@ -59,23 +68,36 @@ class CopyrightAppender:
             full_path = os.path.join(path, item)
             if os.path.isdir(full_path):
                 if item not in self.skip_dir:
-                    print(full_path + '不跳过')
                     self.__foreach_dir_append(full_path)
                 else:
-                    print(full_path + ' 已跳过')
+                    print('文件夹 ' + full_path + ' 已跳过')
             else:
                 if item not in self.skip_file:
                     if item in self.apply_file or item.endswith(tuple(self.suffix)):
-                        print(full_path + ' 已添加')
+                        self.__choose_append_style(item)
+                        print('文件 ' + full_path + ' 已添加')
+                else:
+                    print('文件 ' + full_path + ' 已跳过')
+
+    def __choose_append_style(self, name):
+        for suffix in self.c_style_suffix:
+            if name.endswith(suffix):
+                print(name + ' c-style')
+                return
+        for suffix in self.python_style_suffix:
+            if name.endswith(suffix):
+                print(name + ' python-style')
+                return
+        for suffix in self.ini_style_suffix:
+            if name.endswith(suffix):
+                print(name + ' ini-style')
+                return
+        print(name + ' txt-style')
 
 
     def Work(self):
-        self.__read_ini()
-        print(self.suffix)
-        print(self.apply_file)
-        print(self.skip_file)
-        print(self.skip_dir)
-        self.Run()
+        if self.__check_file_exist() == 0:
+            self.__read_copyright()
 
 
 ca = CopyrightAppender()
