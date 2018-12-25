@@ -13,6 +13,7 @@ class CopyrightAppender:
     suffix = []
     apply_file = []
     skip_file = []
+    skip_dir = []
 
     def __init__(self):
         pass
@@ -44,6 +45,10 @@ class CopyrightAppender:
                 if v in self.apply_file:
                     self.apply_file.remove(v)
                     print(v + ' 在配置中有冲突，以跳过处理')
+        if conf.has_section('skipdir'):
+            for k, v in conf.items('skipdir'):
+                if v not in self.skip_dir:
+                    self.skip_dir.append(v)
 
     def Run(self):
         print('你要处理的文件夹为: ' + os.path.abspath('..'))
