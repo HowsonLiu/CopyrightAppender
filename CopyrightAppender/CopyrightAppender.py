@@ -18,7 +18,7 @@ class CopyrightAppender:
     def __init__(self):
         pass
 
-    def CheckFileExist(self):
+    def __check_file_exist(self):
         if os.path.exists(self.ini_path) is False:
             print('ini配置文件不存在')
             return -1
@@ -27,7 +27,7 @@ class CopyrightAppender:
             return -1
         return 0
 
-    def ReadIni(self):
+    def __read_ini(self):
         conf = configparser.ConfigParser()
         conf.read(self.ini_path, encoding='utf-8')
         if conf.has_section('suffix'):
@@ -52,22 +52,26 @@ class CopyrightAppender:
 
     def Run(self):
         print('你要处理的文件夹为: ' + os.path.abspath('..'))
-        self.ForeachDirAppend('..')
+        self.__foreach_dir_append('..')
 
-    def ForeachDirAppend(self, path):
+    def __foreach_dir_append(self, path):
         for item in os.listdir(path):
-            item = os.path.join(path, item)
-            if os.path.isdir(item):
-                print('Dir ' + item)
-                self.ForeachDirAppend(item)
+            full_path = os.path.join(path, item)
+            if os.path.isdir(full_path):
+                if item not in self.skip_dir:
+                    self.__foreach_dir_append(item)
             else:
-                print('File ' + item)
+                if item not in self.skip_file:
+                    if item in self.apply_file or item.endswith(self.suffix):
+                        print(path + ' 已添加')
+
 
     def Work(self):
-        self.ReadIni()
+        self.__read_ini()
         print(self.suffix)
         print(self.apply_file)
         print(self.skip_file)
+        print(self.skip_dir)
         self.Run()
 
 
