@@ -3,6 +3,8 @@ import configparser
 import re
 import chardet
 
+# TODO 编码格式判断
+
 class CopyrightAppender:
     ini_path = './CopyrightAppender.ini'
     new_copyright_path = './Copyright.txt'
@@ -24,6 +26,8 @@ class CopyrightAppender:
     copyright_text_encode = ''
 
     success_file = []
+    clean_file_count = 0
+    clean_path = '..'
 
     def __init__(self):
         pass
@@ -79,9 +83,17 @@ class CopyrightAppender:
                 if item not in self.skip_file:
                     if item in self.apply_file or item.endswith(tuple(self.suffix)):
                         self.__choose_append_style(full_path)
+                        if full_path not in self.success_file:
+                            self.success_file.append(full_path)
                         print('文件 ' + full_path + ' 已添加')
                 else:
                     print('文件 ' + full_path + ' 已跳过')
+
+    def _after_append(self):
+        if len(self.success_file) > 0:
+            with open(self.old_copyright_path, 'w') as file:
+                pass
+            print('成功添加 ' + str(len(self.success_file)) + ' 个文件\n')
 
     def __choose_append_style(self, path):
         for suffix in self.c_style_suffix:
@@ -98,6 +110,16 @@ class CopyrightAppender:
                 return
         self.__append_text(path)
 
+    def _clean_files(self):
+        if len(self.success_file) > 0:
+            for file in self.success_file:
+                if self.__choose_clean_style(file):
+                    self.clean_file_count += 1
+                    print('文件 ' + file + ' 已清理')
+            self.success_file = []
+        else:
+            self.__foreach_dir_clean(self.clean_path)
+
     def __foreach_dir_clean(self, path):
         for item in os.listdir(path):
             full_path = os.path.join(path, item)
@@ -110,9 +132,16 @@ class CopyrightAppender:
                 if item not in self.skip_file:
                     if item in self.apply_file or item.endswith(tuple(self.suffix)):
                         if self.__choose_clean_style(full_path):
+                            self.clean_file_count += 1
                             print('文件 ' + full_path + ' 已清理')
                 else:
                     print('文件 ' + full_path + ' 已跳过')
+
+    def _after_clean(self):
+        if os.path.exists(self.old_copyright_path):
+            os.remove(self.old_copyright_path)
+        print('成功清除 ' + str(self.clean_file_count) + ' 个文件\n')
+        self.clean_file_count = 0
 
     def __choose_clean_style(self, path):
         for suffix in self.c_style_suffix:
@@ -272,8 +301,9 @@ class CopyrightAppender:
         self.__read_copyright()
         if len(self.copyright_text_line) == 0:
             print('Copyright.txt 是空的')
+            return
 
-        print('你要处理的文件夹为: ' + os.path.abspath('..') + ' , 不是的话快按×')
+        print('你要处理的文件夹为: ' + os.path.abspath(self.clean_path) + ' , 不是的话快按×')
         os.system('pause')
         if os.path.exists(self.old_copyright_path):
             answer = ''
@@ -281,7 +311,8 @@ class CopyrightAppender:
                 print('检测到有旧的 Copyright, 是否清理 (y/n)')
                 answer = input()
                 if answer == 'y':
-                    self.__foreach_dir_clean('..')
+                    self.__foreach_dir_clean(self.clean_path)
+                    self._after_clean()
                     break
                 elif answer == 'n':
                     break
@@ -290,9 +321,12 @@ class CopyrightAppender:
             print('你想要做的是: append or clean (a/c)')  # 右上角退出
             answer = input()
             if answer == 'a':
-                self.__foreach_dir_append('..')
+                self.__foreach_dir_append(self.clean_path)
+                self._after_append()
             elif answer == 'c':
-                self.__foreach_dir_clean('..')
+                self._clean_files()
+                self._after_clean()
+            answer = ''
 
 ca = CopyrightAppender()
 ca.run()
