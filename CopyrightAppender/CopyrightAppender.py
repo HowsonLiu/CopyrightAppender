@@ -1,9 +1,9 @@
 import os
 import configparser
 import re
-import chardet
 
-# TODO 编码格式判断
+# 关于编码格式很有问题，当Copyright有中文的时候需要用utf-8打开，否则报错，但没有中文的时候使用utf-8打开也会报错
+# fuck 我怎么知道有没有中文嘛 而且chardet库也不准，一般没中文都会判定为ascii
 
 class CopyrightAppender:
     ini_path = './CopyrightAppender.ini'
@@ -22,8 +22,6 @@ class CopyrightAppender:
 
     # Copyright.txt文件每一行文字的列表
     copyright_text_line = []
-    # Copyright.txt的编码格式
-    copyright_text_encode = ''
 
     success_file = []
     clean_file_count = 0
@@ -65,11 +63,8 @@ class CopyrightAppender:
                     self.skip_dir.append(v)
 
     def __read_copyright(self):
-        with open(self.new_copyright_path) as file:
+        with open(self.new_copyright_path, encoding='utf-8') as file:
             self.copyright_text_line = file.readlines()
-        with open(self.new_copyright_path, 'rb') as file:
-            data = file.read()
-            self.copyright_text_encode = chardet.detect(data)
 
     def __foreach_dir_append(self, path):
         for item in os.listdir(path):
@@ -305,19 +300,15 @@ class CopyrightAppender:
 
         print('你要处理的文件夹为: ' + os.path.abspath(self.clean_path) + ' , 不是的话快按×')
         os.system('pause')
+        answer = ''
         if os.path.exists(self.old_copyright_path):
-            answer = ''
-            while(answer not in ['y', 'n']):
+            while answer not in ('y', 'n'):
                 print('检测到有旧的 Copyright, 是否清理 (y/n)')
                 answer = input()
-                if answer == 'y':
-                    self.__foreach_dir_clean(self.clean_path)
-                    self._after_clean()
-                    break
-                elif answer == 'n':
-                    break
-        answer = ''
-        while(answer not in ['a', 'c']):
+            if answer == 'y':
+                self.__foreach_dir_clean(self.clean_path)
+                self._after_clean()
+        while answer not in ('a', 'c'):
             print('你想要做的是: append or clean (a/c)')  # 右上角退出
             answer = input()
             if answer == 'a':
