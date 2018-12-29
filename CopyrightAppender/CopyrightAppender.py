@@ -6,9 +6,10 @@ import re
 # 管他什么编码，统统使用单字节读取写入，出现乱码调一下格式就好了
 
 class CopyrightAppender:
+    conf = None
+
     ini_path = './CopyrightAppender.ini'
     new_copyright_path = './Copyright.txt'
-    old_copyright_path = './.oldCopyright'  # 标志是否存在
 
     # 相同类型注释的后缀
     c_style_suffix = ['.c', '.cpp', '.h', '.java', '.php', '.js']
@@ -26,9 +27,17 @@ class CopyrightAppender:
     success_file = []
     clean_file_count = 0
     clean_path = '..'
+    clean_abs_path = ''
+    ini_clean_path = ''
 
     def __init__(self):
-        pass
+        self.conf = configparser.ConfigParser()
+        self.conf.read(self.ini_path, encoding='utf-8')
+        if self.conf.has_section('usedfolder') is False:
+            self.conf.add_section('usedfolder')
+            self.conf.write(open(self.ini_path, 'w'))
+        self.clean_abs_path = os.path.abspath(self.clean_path)
+        self.ini_clean_path = self.clean_abs_path.replace(':', '').lower() # configParse在写的时候自动转换成小写，而且不能有:
 
     def __check_file_exist(self):
         if os.path.exists(self.ini_path) is False:
@@ -40,25 +49,23 @@ class CopyrightAppender:
         return 0
 
     def __read_ini(self):
-        conf = configparser.ConfigParser()
-        conf.read(self.ini_path, encoding='utf-8')
-        if conf.has_section('suffix'):
-            for k, v in conf.items('suffix'):
+        if self.conf.has_section('suffix'):
+            for k, v in self.conf.items('suffix'):
                 if v not in self.suffix:
                     self.suffix.append(v)
-        if conf.has_section('applyfile'):
-            for k, v in conf.items('applyfile'):
+        if self.conf.has_section('applyfile'):
+            for k, v in self.conf.items('applyfile'):
                 if v not in self.apply_file:
                     self.apply_file.append(v)
-        if conf.has_section('skipfile'):
-            for k, v in conf.items('skipfile'):
+        if self.conf.has_section('skipfile'):
+            for k, v in self.conf.items('skipfile'):
                 if v not in self.skip_file:
                     self.skip_file.append(v)
                 if v in self.apply_file:
                     self.apply_file.remove(v)
                     print(v + ' 在配置中有冲突，以跳过处理')
-        if conf.has_section('skipdir'):
-            for k, v in conf.items('skipdir'):
+        if self.conf.has_section('skipdir'):
+            for k, v in self.conf.items('skipdir'):
                 if v not in self.skip_dir:
                     self.skip_dir.append(v)
 
@@ -86,8 +93,8 @@ class CopyrightAppender:
 
     def _after_append(self):
         if len(self.success_file) > 0:
-            with open(self.old_copyright_path, 'w') as file:
-                pass
+            self.conf.set('usedfolder', self.ini_clean_path, '1')
+            self.conf.write(open(self.ini_path, 'w'))
             print('成功添加 ' + str(len(self.success_file)) + ' 个文件\n')
 
     def __choose_append_style(self, path):
@@ -133,8 +140,8 @@ class CopyrightAppender:
                     print('文件 ' + full_path + ' 已跳过')
 
     def _after_clean(self):
-        if os.path.exists(self.old_copyright_path):
-            os.remove(self.old_copyright_path)
+        self.conf.set('usedfolder', self.ini_clean_path, '0')
+        self.conf.write(open(self.ini_path, 'w'))
         print('成功清除 ' + str(self.clean_file_count) + ' 个文件\n')
         self.clean_file_count = 0
 
@@ -301,7 +308,9 @@ class CopyrightAppender:
         print('你要处理的文件夹为: ' + os.path.abspath(self.clean_path) + ' , 不是的话快按×')
         os.system('pause')
         answer = ''
-        if os.path.exists(self.old_copyright_path):
+
+        if self.ini_clean_path in self.conf.options('usedfolder') and \
+                self.conf.get('usedfolder', self.ini_clean_path) == '1':
             while answer not in ('y', 'n'):
                 print('检测到有旧的 Copyright, 是否清理 (y/n)')
                 answer = input()
