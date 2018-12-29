@@ -2,8 +2,8 @@ import os
 import configparser
 import re
 
-# 关于编码格式很有问题，当Copyright有中文的时候需要用utf-8打开，否则报错，但没有中文的时候使用utf-8打开也会报错
-# fuck 我怎么知道有没有中文嘛 而且chardet库也不准，一般没中文都会判定为ascii
+# 别跟老夫说什么编码不编码的，老夫代码就一个字，干！
+# 管他什么编码，统统使用单字节读取写入，出现乱码调一下格式就好了
 
 class CopyrightAppender:
     ini_path = './CopyrightAppender.ini'
@@ -63,7 +63,7 @@ class CopyrightAppender:
                     self.skip_dir.append(v)
 
     def __read_copyright(self):
-        with open(self.new_copyright_path, encoding='utf-8') as file:
+        with open(self.new_copyright_path, 'rb') as file:
             self.copyright_text_line = file.readlines()
 
     def __foreach_dir_append(self, path):
@@ -154,15 +154,15 @@ class CopyrightAppender:
     def __comment_on_c(self):
         c_comment = []
         for line in self.copyright_text_line:
-            c_comment.append(' *' + line)
-        c_comment.insert(0, '/**\n')
-        c_comment.append('\n */')
-        c_comment.append('\n\n/*Add by CopyrightAppender*/\n')
-        return ''.join(c_comment)
+            c_comment.append(b' *' + line)
+        c_comment.insert(0, b'/**\n')
+        c_comment.append(b'\n */')
+        c_comment.append(b'\n\n/*Add by CopyrightAppender*/\n')
+        return b''.join(c_comment)
 
     def __append_c(self, path):
         copyright_text = self.__comment_on_c()
-        with open(path, 'r+') as file:
+        with open(path, 'rb+') as file:
             oldtext = file.read()
             file.seek(0)
             file.write(copyright_text)
@@ -170,11 +170,11 @@ class CopyrightAppender:
 
     def __clean_c(self, path):
         copyright_text = self.__comment_on_c()
-        with open(path, 'r') as file:
+        with open(path, 'rb') as file:
             text = file.read()
         if copyright_text in text:
-            text = text.replace(copyright_text, '')
-            with open(path, 'w') as file:
+            text = text.replace(copyright_text, b'')
+            with open(path, 'wb') as file:
                 file.write(text)
             return True
         return False
@@ -187,37 +187,37 @@ class CopyrightAppender:
     def __comment_on_py(self):
         py_comment = []
         for line in self.copyright_text_line:
-            py_comment.append('# ' + line)
-        py_comment.append('\n\n# Add by CopyrightAppender\n')
-        return ''.join(py_comment), py_comment
+            py_comment.append(b'# ' + line)
+        py_comment.append(b'\n\n# Add by CopyrightAppender\n')
+        return b''.join(py_comment), py_comment
 
     # python不能直接插入第一行，有可能有特殊注释，特殊注释一般在一二行，我只对一二行进行判断
     def __append_py(self, path):
         copyright_text, copyright_text_line = self.__comment_on_py()
-        with open(path, 'r+') as file:
+        with open(path, 'rb+') as file:
             file_line = file.readlines()
             insert_num = 0
             if len(file_line) >= 1:
                 # 第一行通常是编译器路径
-                if re.compile('^#!').search(file_line[0]) is not None:
+                if re.compile(b'^#!').search(file_line[0]) is not None:
                     insert_num += 1
                 # 第二行是编码格式 https://blog.csdn.net/xld_19920728/article/details/80534146
-                if re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)').search(file_line[0]) is not None:
+                if re.compile(b'^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)').search(file_line[0]) is not None:
                     insert_num += 1
-                if len(file_line) >= 2 and re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)').search(file_line[1]) is not None:
+                if len(file_line) >= 2 and re.compile(b'^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)').search(file_line[1]) is not None:
                     insert_num += 1
             for t in reversed(copyright_text_line):
                 file_line.insert(insert_num, t)
             file.seek(0)
-            file.write(''.join(file_line))
+            file.write(b''.join(file_line))
 
     def __clean_py(self, path):
         copyright_text, copyright_text_line = self.__comment_on_py()
-        with open(path, 'r') as file:
+        with open(path, 'rb') as file:
             text = file.read()
         if copyright_text in text:
-            text = text.replace(copyright_text, '')
-            with open(path, 'w') as file:
+            text = text.replace(copyright_text, b'')
+            with open(path, 'wb') as file:
                 file.write(text)
             return True
         return False
@@ -229,13 +229,13 @@ class CopyrightAppender:
     def __comment_on_ini(self):
         ini_comment = []
         for line in self.copyright_text_line:
-            ini_comment.append(';' + line)
-        ini_comment.append('\n\n;Add by CopyrightAppender\n')
-        return ''.join(ini_comment)
+            ini_comment.append(b';' + line)
+        ini_comment.append(b'\n\n;Add by CopyrightAppender\n')
+        return b''.join(ini_comment)
 
     def __append_ini(self, path):
         copyright_text = self.__comment_on_ini()
-        with open(path, 'r+') as file:
+        with open(path, 'rb+') as file:
             oldtext = file.read()
             file.seek(0)
             file.write(copyright_text)
@@ -243,11 +243,11 @@ class CopyrightAppender:
 
     def __clean_ini(self, path):
         copyright_text = self.__comment_on_ini()
-        with open(path, 'r') as file:
+        with open(path, 'rb') as file:
             text = file.read()
         if copyright_text in text:
-            text = text.replace(copyright_text, '')
-            with open(path, 'w') as file:
+            text = text.replace(copyright_text, b'')
+            with open(path, 'wb') as file:
                 file.write(text)
             return True
         return False
@@ -260,12 +260,12 @@ class CopyrightAppender:
         text_comment = []
         for line in self.copyright_text_line:
             text_comment.append(line)
-        text_comment.append('\n\nAdd by CopyrightAppender\n')
-        return ''.join(text_comment)
+        text_comment.append(b'\n\nAdd by CopyrightAppender\n')
+        return b''.join(text_comment)
 
     def __append_text(self, path):
         copyright_text = self.__comment_on_text()
-        with open(path, 'r+') as file:
+        with open(path, 'rb+') as file:
             oldtext = file.read()
             file.seek(0)
             file.write(copyright_text)
@@ -273,11 +273,11 @@ class CopyrightAppender:
 
     def __clean_text(self, path):
         copyright_text = self.__comment_on_text()
-        with open(path, 'r') as file:
+        with open(path, 'rb') as file:
             text = file.read()
         if copyright_text in text:
-            text = text.replace(copyright_text, '')
-            with open(path, 'w') as file:
+            text = text.replace(copyright_text, b'')
+            with open(path, 'wb') as file:
                 file.write(text)
             return True
         return False
