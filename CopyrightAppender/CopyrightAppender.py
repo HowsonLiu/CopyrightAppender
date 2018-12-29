@@ -2,19 +2,28 @@ import os
 import configparser
 import re
 
+# TODO 提示语言
+
 # 别跟老夫说什么编码不编码的，老夫代码就一个字，干！
 # 管他什么编码，统统使用单字节读取写入，出现乱码调一下格式就好了
 
 class CopyrightAppender:
     conf = None
 
-    ini_path = './CopyrightAppender.ini'
-    new_copyright_path = './Copyright.txt'
+    INI_PATH = './CopyrightAppender.ini'
+    COPYRIGHT_PATH = './Copyright.txt'
 
     # 相同类型注释的后缀
-    c_style_suffix = ['.c', '.cpp', '.h', '.java', '.php', '.js']
-    python_style_suffix = ['.py']
-    ini_style_suffix = ['.ini']
+    C_STYLE_SUFFIX = ['.c', '.cpp', '.h', '.java', '.php', '.js']
+    PYTHON_STYLE_SUFFIX = ['.py']
+    INI_STYLE_SUFFIX = ['.ini']
+
+    # ini中的标签名
+    SKIP_DIR = 'skipdir'
+    SKIP_FILE = 'skipfile'
+    APPLY_FILE = 'applyfile'
+    SUFFIX = 'suffix'
+    USED_FOLDER = 'usedfolder'
 
     suffix = []
     apply_file = []
@@ -32,45 +41,45 @@ class CopyrightAppender:
 
     def __init__(self):
         self.conf = configparser.ConfigParser()
-        self.conf.read(self.ini_path, encoding='utf-8')
-        if self.conf.has_section('usedfolder') is False:
-            self.conf.add_section('usedfolder')
-            self.conf.write(open(self.ini_path, 'w'))
+        self.conf.read(self.INI_PATH, encoding='utf-8')
+        if self.conf.has_section(self.USED_FOLDER) is False:
+            self.conf.add_section(self.USED_FOLDER)
+            self.conf.write(open(self.INI_PATH, 'w'))
         self.clean_abs_path = os.path.abspath(self.clean_path)
         self.ini_clean_path = self.clean_abs_path.replace(':', '').lower() # configParse在写的时候自动转换成小写，而且不能有:
 
     def __check_file_exist(self):
-        if os.path.exists(self.ini_path) is False:
+        if os.path.exists(self.INI_PATH) is False:
             print('ini配置文件不存在')
             return -1
-        if os.path.exists(self.new_copyright_path) is False:
+        if os.path.exists(self.COPYRIGHT_PATH) is False:
             print('Copyright文件不存在')
             return -1
         return 0
 
     def __read_ini(self):
-        if self.conf.has_section('suffix'):
-            for k, v in self.conf.items('suffix'):
+        if self.conf.has_section(self.SUFFIX):
+            for k, v in self.conf.items(self.SUFFIX):
                 if v not in self.suffix:
                     self.suffix.append(v)
-        if self.conf.has_section('applyfile'):
-            for k, v in self.conf.items('applyfile'):
+        if self.conf.has_section(self.APPLY_FILE):
+            for k, v in self.conf.items(self.APPLY_FILE):
                 if v not in self.apply_file:
                     self.apply_file.append(v)
-        if self.conf.has_section('skipfile'):
-            for k, v in self.conf.items('skipfile'):
+        if self.conf.has_section(self.SKIP_FILE):
+            for k, v in self.conf.items(self.SKIP_FILE):
                 if v not in self.skip_file:
                     self.skip_file.append(v)
                 if v in self.apply_file:
                     self.apply_file.remove(v)
                     print(v + ' 在配置中有冲突，以跳过处理')
-        if self.conf.has_section('skipdir'):
-            for k, v in self.conf.items('skipdir'):
+        if self.conf.has_section(self.SKIP_DIR):
+            for k, v in self.conf.items(self.SKIP_DIR):
                 if v not in self.skip_dir:
                     self.skip_dir.append(v)
 
     def __read_copyright(self):
-        with open(self.new_copyright_path, 'rb') as file:
+        with open(self.COPYRIGHT_PATH, 'rb') as file:
             self.copyright_text_line = file.readlines()
 
     def __foreach_dir_append(self, path):
@@ -91,28 +100,28 @@ class CopyrightAppender:
                 else:
                     print('文件 ' + full_path + ' 已跳过')
 
-    def _after_append(self):
+    def __after_append(self):
         if len(self.success_file) > 0:
-            self.conf.set('usedfolder', self.ini_clean_path, '1')
-            self.conf.write(open(self.ini_path, 'w'))
+            self.conf.set(self.USED_FOLDER, self.ini_clean_path, '1')
+            self.conf.write(open(self.INI_PATH, 'w'))
             print('成功添加 ' + str(len(self.success_file)) + ' 个文件\n')
 
     def __choose_append_style(self, path):
-        for suffix in self.c_style_suffix:
+        for suffix in self.C_STYLE_SUFFIX:
             if path.endswith(suffix):
                 self.__append_c(path)
                 return
-        for suffix in self.python_style_suffix:
+        for suffix in self.PYTHON_STYLE_SUFFIX:
             if path.endswith(suffix):
                 self.__append_py(path)
                 return
-        for suffix in self.ini_style_suffix:
+        for suffix in self.INI_STYLE_SUFFIX:
             if path.endswith(suffix):
                 self.__append_ini(path)
                 return
         self.__append_text(path)
 
-    def _clean_files(self):
+    def __clean_files(self):
         if len(self.success_file) > 0:
             for file in self.success_file:
                 if self.__choose_clean_style(file):
@@ -139,20 +148,20 @@ class CopyrightAppender:
                 else:
                     print('文件 ' + full_path + ' 已跳过')
 
-    def _after_clean(self):
-        self.conf.set('usedfolder', self.ini_clean_path, '0')
-        self.conf.write(open(self.ini_path, 'w'))
+    def __after_clean(self):
+        self.conf.set(self.USED_FOLDER, self.ini_clean_path, '0')
+        self.conf.write(open(self.INI_PATH, 'w'))
         print('成功清除 ' + str(self.clean_file_count) + ' 个文件\n')
         self.clean_file_count = 0
 
     def __choose_clean_style(self, path):
-        for suffix in self.c_style_suffix:
+        for suffix in self.C_STYLE_SUFFIX:
             if path.endswith(suffix):
                 return self.__clean_c(path)
-        for suffix in self.python_style_suffix:
+        for suffix in self.PYTHON_STYLE_SUFFIX:
             if path.endswith(suffix):
                 return self.__clean_py(path)
-        for suffix in self.ini_style_suffix:
+        for suffix in self.INI_STYLE_SUFFIX:
             if path.endswith(suffix):
                 return self.__clean_ini(path)
         return self.__clean_text(path)
@@ -309,23 +318,23 @@ class CopyrightAppender:
         os.system('pause')
         answer = ''
 
-        if self.ini_clean_path in self.conf.options('usedfolder') and \
-                self.conf.get('usedfolder', self.ini_clean_path) == '1':
+        if self.ini_clean_path in self.conf.options(self.USED_FOLDER) and \
+                self.conf.get(self.USED_FOLDER, self.ini_clean_path) == '1':
             while answer not in ('y', 'n'):
                 print('检测到有旧的 Copyright, 是否清理 (y/n)')
                 answer = input()
             if answer == 'y':
                 self.__foreach_dir_clean(self.clean_path)
-                self._after_clean()
+                self.__after_clean()
         while answer not in ('a', 'c'):
             print('你想要做的是: append or clean (a/c)')  # 右上角退出
             answer = input()
             if answer == 'a':
                 self.__foreach_dir_append(self.clean_path)
-                self._after_append()
+                self.__after_append()
             elif answer == 'c':
-                self._clean_files()
-                self._after_clean()
+                self.__clean_files()
+                self.__after_clean()
             answer = ''
 
 ca = CopyrightAppender()
