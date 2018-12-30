@@ -1,6 +1,7 @@
 import os
 import configparser
 import re
+import time
 
 # TODO 提示语言
 
@@ -301,20 +302,24 @@ class CopyrightAppender:
 # ------------------------------------------------------------------------------------------------
 
     def run(self):
+        print('CopyrightAppender')
         if self.__check_file_exist() != 0:
+            time.sleep(1)
             return
 
         self.__read_ini()
         if len(self.apply_file) == 0 and len(self.suffix) == 0:
             print('没有要处理的文件和后缀')
+            time.sleep(1)
             return
 
         self.__read_copyright()
         if len(self.copyright_text_line) == 0:
             print('Copyright.txt 是空的')
+            time.sleep(1)
             return
 
-        print('你要处理的文件夹为: ' + os.path.abspath(self.clean_path) + ' , 不是的话快按×')
+        print('你要处理的文件夹是: ' + os.path.abspath(self.clean_path))
         os.system('pause')
         answer = ''
 
