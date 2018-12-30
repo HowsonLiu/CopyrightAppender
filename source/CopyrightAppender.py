@@ -3,8 +3,6 @@ import configparser
 import re
 import time
 
-# TODO 提示语言
-
 # 别跟老夫说什么编码不编码的，老夫代码就一个字，干！
 # 管他什么编码，统统使用单字节读取写入，出现乱码调一下格式就好了
 
