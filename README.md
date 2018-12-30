@@ -19,7 +19,7 @@
 #                                                      
 #                                                      
 ```
-现在使用CopyrightAppender就能很方便批量对指定文件添加啦╮(￣▽￣)╭
+## 现在使用CopyrightAppender就能很方便批量对指定文件添加啦╮(￣▽￣)╭
 * 下载并解压CopyrightAppender
 ![下载并解压](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/1.png)
 * 放到要添加的文件夹的子一级目录内(我已项目中的test文件夹示例)
@@ -43,6 +43,11 @@
 ![退出](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/9.png)
 * 清理的还是绝对可靠的, TortoiseGit都看不出来
 ![效果](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/10.png)
+## 效果(o≖◡≖)
+![c](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/11.png)  
+![python](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/12.png)  
+![ini](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/13.png)  
+![text](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/14.png)  
 ## 小贴士（づ￣3￣）づ╭❤～
 * 本工具唯一退出方式，就是右上角的×
 * 改Copyright.txt之前最好clean一下
@@ -58,5 +63,5 @@
 * C风格的 /**/ 后缀为.c .cpp .h .java .php .js
 * Python风格的 #  后缀为.py
 * ini风格的 ; 后缀为 .ini
-* 文本风格的 其余所有后缀
+* 文本风格的 其余所有后缀<br>
 若你想改动的话，到CopyrightAppender.py改动吧
