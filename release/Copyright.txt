@@ -1,0 +1,4 @@
+this is sample copyright
+author: me
+date: today
+test: test
