@@ -32,9 +32,9 @@
 ![运行](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/5.png)
 * 先按a添加吧
 ![添加](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/6.png)
-这里添加的规则是这样的：先跳过文件夹->再跳过指定文件->再匹配指定文件->最后匹配后缀<br>
-添加之后当前路径会写入ini文件，值为1
-#### 这时候强烈建议去看一下修改的文件有没有乱码ヽ(`Д´)ﾉ 有得话还能按c救一下，不然就只能手动删了
+这里添加的规则是这样的：先跳过文件夹->再跳过指定文件->再匹配指定文件->最后匹配后缀  
+添加之后当前路径会写入ini文件，值为1  
+**这时候强烈建议去看一下修改的文件有没有乱码ヽ(`Д´)ﾉ 有得话还能按c救一下，不然就只能手动删了**
 * 假设我不想要了或是出错了，按c
 ![clean](https://raw.githubusercontent.com/HowsonLiu/ReadmeImage/master/CopyrightAppender/7.png)
 * 可以c多几次保证
